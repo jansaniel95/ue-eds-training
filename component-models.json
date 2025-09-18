@@ -235,17 +235,21 @@
     ]
   },
   {
-    "id": "product-item",
+    "id": "product",
     "fields": [
       {
-        "component": "aem-content-fragment",
-        "name": "picker",
-        "label": "Content Fragment Picker",
+        "component": "reference",
         "valueType": "string",
-        "variationName": "contentFragmentVariation",
-        "validation": {
-          "rootPath": "/content/dam"
-        }
+        "name": "image",
+        "label": "Image",
+        "multi": false
+      },
+      {
+        "component": "richtext",
+        "name": "text",
+        "value": "",
+        "label": "Text",
+        "valueType": "string"
       }
     ]
   }

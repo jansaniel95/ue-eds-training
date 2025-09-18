@@ -160,30 +160,30 @@
           }
         },
         {
-          "title": "Product",
-          "id": "product",
+          "title": "Products",
+          "id": "products",
           "plugins": {
             "xwalk": {
               "page": {
                 "resourceType": "core/franklin/components/block/v1/block",
                 "template": {
-                  "name": "Product",
-                  "filter": "product"
+                  "name": "Products",
+                  "filter": "products"
                 }
               }
             }
           }
         },
         {
-          "title": "Product Item",
-          "id": "product-item",
+          "title": "Product",
+          "id": "product",
           "plugins": {
             "xwalk": {
               "page": {
                 "resourceType": "core/franklin/components/block/v1/block/item",
                 "template": {
-                  "name": "Product Item",
-                  "model": "product-item"
+                  "name": "Product",
+                  "model": "product"
                 }
               }
             }

@@ -17,7 +17,7 @@
       "columns",
       "fragment",
       "quote",
-      "product"
+      "products"
     ]
   },
   {
@@ -42,9 +42,9 @@
     ]
   },
   {
-    "id": "product",
+    "id": "products",
     "components": [
-      "product-item"
+      "product"
     ]
   }
 ]
