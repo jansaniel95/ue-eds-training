@@ -233,5 +233,16 @@
         "value": ""
       }
     ]
+  },
+  {
+    "id": "product-item",
+    "fields": [
+      {
+        "component": "aem-content",
+        "name": "contentFragmentPath",
+        "label": "Content Fragment Path",
+        "description": "Path to the content fragment containing product data"
+      }
+    ]
   }
 ]
