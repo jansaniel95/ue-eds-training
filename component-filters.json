@@ -16,7 +16,8 @@
       "cards",
       "columns",
       "fragment",
-      "quote"
+      "quote",
+      "product"
     ]
   },
   {
@@ -38,6 +39,12 @@
       "image",
       "button",
       "title"
+    ]
+  },
+  {
+    "id": "product",
+    "components": [
+      "product-item"
     ]
   }
 ]
