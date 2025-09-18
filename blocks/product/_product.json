@@ -36,10 +36,14 @@
       "id": "product-item",
       "fields": [
         {
-          "component": "aem-content",
-          "name": "contentFragmentPath",
-          "label": "Content Fragment Path",
-          "description": "Path to the content fragment containing product data"
+          "component": "aem-content-fragment",
+          "name": "picker",
+          "label": "Content Fragment Picker",
+          "valueType": "string",
+          "variationName": "contentFragmentVariation",
+          "validation": {
+            "rootPath": "/content/dam"
+          }
         }
       ]
     }

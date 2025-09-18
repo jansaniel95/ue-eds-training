@@ -245,8 +245,7 @@
         "variationName": "contentFragmentVariation",
         "validation": {
           "rootPath": "/content/dam"
-        },
-        "description": "Path to the content fragment containing product data"
+        }
       }
     ]
   }
