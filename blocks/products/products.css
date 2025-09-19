@@ -1,47 +1,57 @@
+/* Products block container */
+.product {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* Product grid layout */
 .product > .product-grid {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
   grid-gap: 32px;
-  max-width: 1200px;
-  margin: 0 auto;
 }
 
+/* Individual product card */
 .product .product-card {
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
   height: 100%;
+  border: 1px solid #e5e5e5;
 }
 
 .product .product-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
 }
 
+/* Card image section */
 .product .product-card-image {
   background: #f8f9fa;
-  padding: 40px 20px 20px;
+  padding: 32px 24px 16px;
   text-align: center;
-  min-height: 180px;
+  min-height: 160px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .product .product-card-image img {
-  max-width: 280px;
+  max-width: 220px;
   width: 100%;
   height: auto;
   object-fit: contain;
 }
 
+/* Card body/content */
 .product .product-card-body {
   padding: 24px;
   flex-grow: 1;
@@ -49,14 +59,16 @@
   flex-direction: column;
 }
 
+/* Product title (credit card name) */
 .product .product-title {
   margin: 0 0 16px 0;
-  font-size: 1.5rem;
+  font-size: 1.375rem;
   font-weight: 700;
   color: #1a1a1a;
   line-height: 1.3;
 }
 
+/* Product description */
 .product .product-description {
   margin: 0 0 20px 0;
   color: #4a4a4a;
@@ -64,105 +76,95 @@
   font-size: 1rem;
 }
 
-.product .product-special-offer {
-  background: #f0f8ff;
-  border-left: 4px solid #0066cc;
-  padding: 16px;
+/* Promo section styling */
+.product .product-promo {
   margin-bottom: 20px;
-  border-radius: 4px;
 }
 
-.product .product-special-offer h4 {
+.product .product-promo h4 {
   margin: 0 0 12px 0;
   font-size: 1rem;
   font-weight: 700;
-  color: #0066cc;
+  color: #1a1a1a;
 }
 
-.product .product-special-offer p {
-  margin: 0 0 8px 0;
+.product .product-promo p {
+  margin: 0 0 12px 0;
   font-size: 0.95rem;
   color: #333;
   line-height: 1.5;
 }
 
-.product .product-special-offer .highlight {
-  font-weight: 700;
-  color: #0066cc;
+.product .product-promo p:last-child {
+  margin-bottom: 0;
 }
 
-.product .product-features {
+.product .product-promo strong {
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.product .product-promo em {
+  font-style: italic;
+}
+
+/* Notes section styling */
+.product .product-notes {
   margin-bottom: 24px;
 }
 
-.product .product-features h4 {
+.product .product-notes h4 {
   margin: 0 0 12px 0;
   font-size: 1rem;
   font-weight: 700;
   color: #1a1a1a;
 }
 
-.product .product-features ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.product .product-features li {
-  position: relative;
-  padding: 6px 0 6px 20px;
+.product .product-notes p {
+  margin: 0 0 12px 0;
   font-size: 0.95rem;
   color: #4a4a4a;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
-.product .product-features li:before {
-  content: "•";
-  position: absolute;
-  left: 0;
-  top: 6px;
-  font-weight: bold;
-  color: #0066cc;
-}
-
-.product .product-important-info {
-  background: #fafafa;
-  padding: 16px;
-  margin-bottom: 24px;
-  border-radius: 6px;
-  border: 1px solid #e5e5e5;
-}
-
-.product .product-important-info h4 {
-  margin: 0 0 12px 0;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #1a1a1a;
-}
-
-.product .product-important-info ul {
+.product .product-notes ul {
   list-style: none;
-  margin: 0;
+  margin: 0 0 20px 0;
   padding: 0;
 }
 
-.product .product-important-info li {
+.product .product-notes li {
   padding: 4px 0;
   font-size: 0.9rem;
   color: #4a4a4a;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  line-height: 1.4;
+  position: relative;
+  padding-left: 16px;
 }
 
-.product .product-important-info .fee {
+.product .product-notes li:before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  top: 4px;
+  font-weight: bold;
+  color: #666;
+}
+
+.product .product-notes .fee {
   font-weight: 600;
   color: #1a1a1a;
 }
 
+.product .product-notes strong {
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+/* Call-to-action section */
 .product .product-cta {
   margin-top: auto;
-  padding-top: 16px;
+  padding-top: 20px;
 }
 
 .product .product-cta-button {
@@ -170,23 +172,27 @@
   width: 100%;
   padding: 12px 24px;
   background: transparent;
-  border: 2px solid #0066cc;
-  color: #0066cc;
+  border: 2px solid #333;
+  color: #333;
   text-decoration: none;
   text-align: center;
   font-weight: 600;
   font-size: 1rem;
-  border-radius: 6px;
+  border-radius: 4px;
   transition: all 0.3s ease;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .product .product-cta-button:hover {
-  background: #0066cc;
+  background: #333;
   color: white;
   text-decoration: none;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+/* Error state styling */
 .product .product-error {
   border: 2px solid #e74c3c;
   background-color: #fff5f5;
@@ -209,21 +215,24 @@
   line-height: 1.5;
 }
 
-/* Responsive adjustments */
+/* Responsive design */
 @media (max-width: 768px) {
+  .product {
+    padding: 0 12px;
+  }
+
   .product > .product-grid {
     grid-template-columns: 1fr;
     grid-gap: 24px;
-    margin: 0 16px;
   }
   
   .product .product-card-image {
-    padding: 20px;
+    padding: 24px 20px 12px;
     min-height: 140px;
   }
   
   .product .product-card-image img {
-    max-width: 240px;
+    max-width: 200px;
   }
   
   .product .product-card-body {
@@ -231,13 +240,16 @@
   }
   
   .product .product-title {
-    font-size: 1.3rem;
+    font-size: 1.25rem;
   }
 }
 
 @media (max-width: 480px) {
+  .product {
+    padding: 0 8px;
+  }
+
   .product > .product-grid {
-    margin: 0 8px;
     grid-gap: 16px;
   }
   
@@ -249,8 +261,12 @@
     font-size: 1.2rem;
   }
   
-  .product .product-special-offer,
-  .product .product-important-info {
-    padding: 12px;
+  .product .product-promo,
+  .product .product-notes {
+    margin-bottom: 16px;
+  }
+
+  .product .product-cta {
+    padding-top: 16px;
   }
 }

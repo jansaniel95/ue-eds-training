@@ -36,17 +36,45 @@
       "id": "product",
       "fields": [
         {
+          "component": "text",
+          "valueType": "string",
+          "name": "productId",
+          "label": "Product ID",
+          "multi": false
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "creditCardName",
+          "label": "Credit Card Name",
+          "multi": false
+        },
+        {
           "component": "reference",
           "valueType": "string",
-          "name": "image",
-          "label": "Image",
+          "name": "creditCardImage",
+          "label": "Credit Card Image",
           "multi": false
         },
         {
           "component": "richtext",
-          "name": "text",
+          "name": "creditCardDescription",
           "value": "",
-          "label": "Text",
+          "label": "Credit Card Description",
+          "valueType": "string"
+        },
+        {
+          "component": "richtext",
+          "name": "promo",
+          "value": "",
+          "label": "Promo",
+          "valueType": "string"
+        },
+        {
+          "component": "richtext",
+          "name": "notes",
+          "value": "",
+          "label": "Notes",
           "valueType": "string"
         }
       ]
