@@ -2,163 +2,116 @@ import { createOptimizedPicture } from '../../scripts/aem.js';
 import { moveInstrumentation } from '../../scripts/scripts.js';
 
 /**
- * Fetches content fragment data from the specified path
- * @param {string} path The path to the content fragment
- * @returns {Object} The parsed content fragment data
+ * Simple GraphQL fetch for credit card content fragments
  */
 async function fetchContentFragment(path) {
-  if (!path || !path.startsWith('/')) {
-    return null;
-  }
-
-  try {
-    // Remove any .html extension and add .plain.html for fetching
-    const cleanPath = path.replace(/(\.plain)?\.html/, '');
-    const resp = await fetch(`${cleanPath}.plain.html`);
-    
-    if (resp.ok) {
-      const text = await resp.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(text, 'text/html');
-      
-      // Extract structured data from the content fragment
-      const main = doc.querySelector('main');
-      if (main) {
-        const productData = {
-          productId: '',
-          creditCardName: '',
-          creditCardImage: '',
-          creditCardImageAlt: '',
-          creditCardDescription: '',
-          promo: '',
-          notes: '',
-          ctaText: 'Find out more',
-          ctaLink: '#'
-        };
-
-        // Extract content fragment fields from structured content
-        const sections = main.querySelectorAll('div');
-        
-        // Look for field patterns in divs or direct content
-        for (const section of sections) {
-          const content = section.textContent.trim();
-          const prevElement = section.previousElementSibling;
-          
-          if (prevElement && prevElement.tagName) {
-            const label = prevElement.textContent.toLowerCase().trim();
-            
-            if (label.includes('productid') || label.includes('product-id')) {
-              productData.productId = content;
-            } else if (label.includes('creditcardname') || label.includes('credit-card-name')) {
-              productData.creditCardName = content;
-            } else if (label.includes('creditcarddescription') || label.includes('credit-card-description')) {
-              productData.creditCardDescription = content;
-            } else if (label.includes('promo')) {
-              productData.promo = content;
-            } else if (label.includes('notes')) {
-              productData.notes = content;
-            }
+  console.log('Fetching content fragment:', path);
+  
+  const graphqlUrl = 'https://author-p9606-e71941.adobeaemcloud.com/content/cq:graphql/your-project/endpoint.json';
+  
+  const query = `
+    query {
+      creditCardList{
+        items{
+          _path
+          creditCardName
+          creditCardDescription{
+            plaintext
+          }
+          creditCardImage{
+          ... on ImageRef {
+                  _path
+                  _authorUrl
+                }
+        }
+          promo{
+            plaintext
+          }notes{
+            plaintext
           }
         }
-
-        // Alternative parsing - look for structured content in tables or lists
-        const tables = main.querySelectorAll('table tr');
-        for (const row of tables) {
-          const cells = row.querySelectorAll('td');
-          if (cells.length >= 2) {
-            const label = cells[0].textContent.toLowerCase().trim();
-            const value = cells[1].textContent.trim();
-            
-            if (label.includes('productid') || label === 'product id') {
-              productData.productId = value;
-            } else if (label.includes('creditcardname') || label === 'credit card name') {
-              productData.creditCardName = value;
-            } else if (label.includes('creditcarddescription') || label === 'credit card description') {
-              productData.creditCardDescription = value;
-            } else if (label.includes('promo')) {
-              productData.promo = value;
-            } else if (label.includes('notes')) {
-              productData.notes = value;
-            }
-          }
-        }
-
-        // Fallback: extract from headings and subsequent content
-        const headings = main.querySelectorAll('h1, h2, h3, h4, h5, h6');
-        for (const heading of headings) {
-          const headingText = heading.textContent.toLowerCase().trim();
-          let nextElement = heading.nextElementSibling;
-          
-          if (headingText.includes('product') && headingText.includes('id')) {
-            if (nextElement) productData.productId = nextElement.textContent.trim();
-          } else if (headingText.includes('credit') && headingText.includes('name')) {
-            if (nextElement) productData.creditCardName = nextElement.textContent.trim();
-          } else if (headingText.includes('description')) {
-            if (nextElement) productData.creditCardDescription = nextElement.textContent.trim();
-          } else if (headingText.includes('promo')) {
-            if (nextElement) productData.promo = nextElement.textContent.trim();
-          } else if (headingText.includes('notes')) {
-            if (nextElement) productData.notes = nextElement.textContent.trim();
-          }
-        }
-
-        // Extract credit card image - look for image with credit card in path or alt text
-        const images = main.querySelectorAll('img');
-        for (const img of images) {
-          const src = img.src || '';
-          const alt = img.alt || '';
-          if (src.toLowerCase().includes('card') || alt.toLowerCase().includes('card')) {
-            productData.creditCardImage = src;
-            productData.creditCardImageAlt = alt || productData.creditCardName;
-            break;
-          }
-        }
-
-        // If no specific image found, use the first image
-        if (!productData.creditCardImage && images.length > 0) {
-          productData.creditCardImage = images[0].src;
-          productData.creditCardImageAlt = images[0].alt || productData.creditCardName;
-        }
-
-        // Look for CTA links
-        const ctaLink = main.querySelector('a[href*="apply"], a[href*="learn"], a[href*="more"], a');
-        if (ctaLink) {
-          productData.ctaText = ctaLink.textContent.trim() || 'Find out more';
-          productData.ctaLink = ctaLink.href;
-        }
-
-        return productData;
       }
     }
+  `;
+
+  try {
+    const response = await fetch(graphqlUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ query })
+    });
+
+    console.log('GraphQL Response:', response.status, response.statusText);
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log('GraphQL Data:', data);
+      
+      // Find the item that matches our path
+      if (data.data && data.data.creditCardList && data.data.creditCardList.items) {
+        const item = data.data.creditCardList.items.find(item => item._path === path);
+        if (item) {
+          console.log('Found matching item:', item);
+          return item;
+        } else {
+          console.log('No item found for path:', path);
+          console.log('Available items:', data.data.creditCardList.items.map(i => i._path));
+        }
+      }
+    } else {
+      console.error('GraphQL failed:', response.status, await response.text());
+    }
   } catch (error) {
-    console.error('Error fetching content fragment:', error);
+    console.error('Fetch error:', error);
   }
   
   return null;
 }
 
 /**
- * Creates a product card element from content fragment data
- * @param {Object} productData The product data from content fragment
- * @returns {HTMLElement} The product card element
+ * Create credit card product card matching the design
  */
 function createProductCard(productData) {
+  if (!productData || productData.error) {
+    const errorCard = document.createElement('li');
+    errorCard.className = 'product-card product-error';
+    errorCard.innerHTML = `
+      <div class="product-card-body">
+        <h3>Error</h3>
+        <p>${productData?.error || 'No data available'}</p>
+      </div>
+    `;
+    return errorCard;
+  }
+
   const card = document.createElement('li');
   card.className = 'product-card';
-  card.setAttribute('data-product-id', productData.productId || '');
 
   // Create image section
-  if (productData.creditCardImage) {
+  if (productData.creditCardImage?._authorUrl || productData.creditCardImage?._path) {
     const imageDiv = document.createElement('div');
     imageDiv.className = 'product-card-image';
     
-    const optimizedPic = createOptimizedPicture(
-      productData.creditCardImage, 
-      productData.creditCardImageAlt || productData.creditCardName, 
-      false, 
-      [{ width: '400' }]
-    );
-    imageDiv.appendChild(optimizedPic);
+    if (productData.creditCardImage._authorUrl) {
+      // Use _authorUrl directly as it already has optimized parameters
+      const picture = document.createElement('picture');
+      const img = document.createElement('img');
+      img.src = productData.creditCardImage._authorUrl;
+      img.srcset = productData.creditCardImage._authorUrl;
+      img.alt = productData.creditCardName || 'Credit Card';
+      img.loading = 'lazy';
+      picture.appendChild(img);
+      imageDiv.appendChild(picture);
+    } else {
+      // Fallback to _path with manual optimization
+      const imageUrl = `https://author-p9606-e71941.adobeaemcloud.com${productData.creditCardImage._path}`;
+      const optimizedPic = createOptimizedPicture(imageUrl, productData.creditCardName || 'Credit Card', false, [{ width: '400' }]);
+      imageDiv.appendChild(optimizedPic);
+    }
+    
     card.appendChild(imageDiv);
   }
 
@@ -175,37 +128,43 @@ function createProductCard(productData) {
   }
 
   // Credit card description
-  if (productData.creditCardDescription) {
+  if (productData.creditCardDescription?.plaintext) {
     const description = document.createElement('p');
     description.className = 'product-description';
-    description.textContent = productData.creditCardDescription;
+    description.textContent = productData.creditCardDescription.plaintext;
     bodyDiv.appendChild(description);
   }
 
-  // Promo/Special offer section
-  if (productData.promo) {
+  // Promo section
+  if (productData.promo?.plaintext) {
     const promoDiv = document.createElement('div');
     promoDiv.className = 'product-promo';
     
-    // Parse promo content for structured information
-    const promoLines = productData.promo.split('\n').filter(line => line.trim());
+    const promoText = productData.promo.plaintext;
+    const promoLines = promoText.split('\n').filter(line => line.trim());
     
-    promoLines.forEach((line, index) => {
+    promoLines.forEach(line => {
       const trimmedLine = line.trim();
       
-      // Check if line looks like a heading (contains "special offer", "rewards", etc.)
+      // Check if line is a heading
       if (trimmedLine.toLowerCase().includes('special offer') || 
           trimmedLine.toLowerCase().includes('rewards special') ||
-          (index === 0 && trimmedLine.endsWith(':'))) {
+          trimmedLine.toLowerCase().includes('already with') ||
+          (trimmedLine.endsWith(':') && !trimmedLine.includes(' - '))) {
         const heading = document.createElement('h4');
         heading.textContent = trimmedLine;
         promoDiv.appendChild(heading);
-      } else {
+      } else if (trimmedLine) {
+        // Regular paragraph with number highlighting
         const p = document.createElement('p');
-        // Handle bold text formatting
-        const formattedText = trimmedLine
-          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-          .replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        // Highlight numbers, dollar amounts, and percentages
+        let formattedText = trimmedLine
+          .replace(/(\d{1,3}(?:,\d{3})*)/g, '<strong>$1</strong>') // Numbers with commas
+          .replace(/(\$\d+)/g, '<strong>$1</strong>') // Dollar amounts
+          .replace(/(\d+(?:\.\d+)?%)/g, '<strong>$1</strong>') // Percentages
+          .replace(/(\$\d+ foreign transaction fees)/g, '<strong>$1</strong>'); // Special phrases
+        
         p.innerHTML = formattedText;
         promoDiv.appendChild(p);
       }
@@ -214,25 +173,23 @@ function createProductCard(productData) {
     bodyDiv.appendChild(promoDiv);
   }
 
-  // Notes section (additional benefits/features)
-  if (productData.notes) {
+  // Notes section
+  if (productData.notes?.plaintext) {
     const notesDiv = document.createElement('div');
     notesDiv.className = 'product-notes';
     
-    const notesLines = productData.notes.split('\n').filter(line => line.trim());
+    const notesText = productData.notes.plaintext;
+    const notesLines = notesText.split('\n').filter(line => line.trim());
+    
     let currentSection = null;
     
-    notesLines.forEach((line, index) => {
+    notesLines.forEach(line => {
       const trimmedLine = line.trim();
       
-      // Check if line is a section heading
       if (trimmedLine.toLowerCase().includes('important') || 
           trimmedLine.toLowerCase().includes('numbers') ||
-          trimmedLine.toLowerCase().includes('qantas') ||
-          trimmedLine.toLowerCase().includes('velocity') ||
           (trimmedLine.endsWith(':') && !trimmedLine.includes(' - '))) {
-        
-        // Create new section
+        // This is a heading
         const heading = document.createElement('h4');
         heading.textContent = trimmedLine;
         notesDiv.appendChild(heading);
@@ -243,26 +200,18 @@ function createProductCard(productData) {
         // Add as list item
         const li = document.createElement('li');
         
-        // Handle fee/rate formatting
         if (trimmedLine.includes(' - ')) {
           const [label, value] = trimmedLine.split(' - ', 2);
           li.innerHTML = `${label.trim()} - <span class="fee">${value.trim()}</span>`;
         } else {
-          // Handle bold text formatting
-          const formattedText = trimmedLine
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>');
-          li.innerHTML = formattedText;
+          li.textContent = trimmedLine;
         }
         
         currentSection.appendChild(li);
       } else if (trimmedLine && !currentSection) {
         // Standalone paragraph
         const p = document.createElement('p');
-        const formattedText = trimmedLine
-          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-          .replace(/\*(.*?)\*/g, '<em>$1</em>');
-        p.innerHTML = formattedText;
+        p.textContent = trimmedLine;
         notesDiv.appendChild(p);
       }
     });
@@ -276,8 +225,8 @@ function createProductCard(productData) {
   
   const ctaButton = document.createElement('a');
   ctaButton.className = 'product-cta-button';
-  ctaButton.textContent = productData.ctaText || 'Find out more';
-  ctaButton.href = productData.ctaLink || '#';
+  ctaButton.textContent = 'Find out more';
+  ctaButton.href = '#';
   ctaDiv.appendChild(ctaButton);
   
   bodyDiv.appendChild(ctaDiv);
@@ -285,52 +234,63 @@ function createProductCard(productData) {
   return card;
 }
 
+
 /**
- * Decorates the product block
- * @param {Element} block The product block element
+ * Decorates the products block
  */
 export default async function decorate(block) {
+  // Check if first row is a title
+  const rows = [...block.children];
+  let titleRow = null;
+  let productRows = rows;
+  
+  // If first row has only one cell with text (no links), treat it as title
+  if (rows.length > 0) {
+    const firstRow = rows[0];
+    const cells = firstRow.querySelectorAll('div');
+    if (cells.length === 1 && !firstRow.querySelector('a') && cells[0].textContent.trim()) {
+      titleRow = firstRow;
+      productRows = rows.slice(1);
+    }
+  }
+
+  // Create title section if exists
+  if (titleRow) {
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'products-title';
+    const titleText = titleRow.textContent.trim();
+    titleDiv.innerHTML = `<h2>${titleText}</h2>`;
+    block.prepend(titleDiv);
+  }
+
   // Convert to ul structure like cards block
   const ul = document.createElement('ul');
-  ul.className = 'product-grid';
-
-  // Process each product item
-  const items = [...block.children];
-  for (const row of items) {
-    moveInstrumentation(row, ul);
-    
+  console.log('Found', productRows.length, 'product items');
+  
+  for (const row of productRows) {
     // Find content fragment path
     const link = row.querySelector('a');
-    const pathText = row.textContent.trim();
-    const contentFragmentPath = link ? link.getAttribute('href') : pathText;
+    const contentFragmentPath = link ? link.getAttribute('href') : row.textContent.trim();
+    
+    console.log('Processing content fragment path:', contentFragmentPath);
 
     if (contentFragmentPath) {
       try {
         const productData = await fetchContentFragment(contentFragmentPath);
-        if (productData) {
-          const productCard = createProductCard(productData);
-          moveInstrumentation(row, productCard);
-          ul.appendChild(productCard);
-        } else {
-          // Fallback: create a card with error message
-          const errorCard = document.createElement('li');
-          errorCard.className = 'product-card product-error';
-          errorCard.innerHTML = `
-            <div class="product-card-body">
-              <h3>Product Not Found</h3>
-              <p>Could not load product data from: ${contentFragmentPath}</p>
-            </div>
-          `;
-          moveInstrumentation(row, errorCard);
-          ul.appendChild(errorCard);
-        }
+        const productCard = createProductCard(productData || { error: `Failed to fetch: ${contentFragmentPath}` });
+        moveInstrumentation(row, productCard);
+        ul.appendChild(productCard);
       } catch (error) {
         console.error('Error processing product item:', error);
+        const errorCard = createProductCard({ error: `Error: ${error.message}` });
+        ul.appendChild(errorCard);
       }
     }
   }
 
-  // Replace block content with the new structure
-  block.textContent = '';
+  // Remove original rows and append the new structure
+  productRows.forEach(row => row.remove());
+  if (titleRow) titleRow.remove();
+  
   block.appendChild(ul);
 }

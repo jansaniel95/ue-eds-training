@@ -1,272 +1,316 @@
 /* Products block container */
-.product {
+.products {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 16px;
 }
 
-/* Product grid layout */
-.product > .product-grid {
+/* Products title */
+.products .products-title {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.products .products-title h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Product grid layout - similar to cards */
+.products > ul {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-  grid-gap: 32px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-gap: 24px;
 }
 
 /* Individual product card */
-.product .product-card {
+.products .product-card {
   background: #fff;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
   height: 100%;
-  border: 1px solid #e5e5e5;
+  border: 1px solid #e1e1e1;
 }
 
-.product .product-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.products .product-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
 }
 
 /* Card image section */
-.product .product-card-image {
-  background: #f8f9fa;
-  padding: 32px 24px 16px;
+.products .product-card-image {
+  background: #f5f5f5;
+  padding: 32px 20px 20px;
   text-align: center;
-  min-height: 160px;
+  min-height: 144px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.product .product-card-image img {
-  max-width: 220px;
+.products .product-card-image img {
+  max-width: 224px;
   width: 100%;
   height: auto;
   object-fit: contain;
 }
 
 /* Card body/content */
-.product .product-card-body {
-  padding: 24px;
+.products .product-card-body {
+  padding: 20px;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
 }
 
 /* Product title (credit card name) */
-.product .product-title {
-  margin: 0 0 16px 0;
-  font-size: 1.375rem;
+.products .product-title {
+  margin: 0 0 12px 0;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #2c3e50;
   line-height: 1.3;
 }
 
 /* Product description */
-.product .product-description {
+.products .product-description {
   margin: 0 0 20px 0;
   color: #4a4a4a;
   line-height: 1.6;
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 /* Promo section styling */
-.product .product-promo {
+.products .product-promo {
   margin-bottom: 20px;
 }
 
-.product .product-promo h4 {
-  margin: 0 0 12px 0;
-  font-size: 1rem;
+.products .product-promo h4 {
+  margin: 0 0 6px 0;
+  font-size: 0.9rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #2c3e50;
+  line-height: 1.4;
 }
 
-.product .product-promo p {
-  margin: 0 0 12px 0;
-  font-size: 0.95rem;
-  color: #333;
+.products .product-promo p {
+  margin: 0 0 10px 0;
+  font-size: 0.85rem;
+  color: #4a4a4a;
   line-height: 1.5;
 }
 
-.product .product-promo p:last-child {
+.products .product-promo p:last-child {
   margin-bottom: 0;
 }
 
-.product .product-promo strong {
+.products .product-promo strong {
   font-weight: 700;
-  color: #1a1a1a;
+  color: #2c3e50;
 }
 
-.product .product-promo em {
+.products .product-promo em {
   font-style: italic;
 }
 
 /* Notes section styling */
-.product .product-notes {
-  margin-bottom: 24px;
+.products .product-notes {
+  margin-bottom: 20px;
 }
 
-.product .product-notes h4 {
-  margin: 0 0 12px 0;
-  font-size: 1rem;
+.products .product-notes h4 {
+  margin: 0 0 6px 0;
+  font-size: 0.9rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: #2c3e50;
+  line-height: 1.4;
 }
 
-.product .product-notes p {
-  margin: 0 0 12px 0;
-  font-size: 0.95rem;
+.products .product-notes p {
+  margin: 0 0 10px 0;
+  font-size: 0.85rem;
   color: #4a4a4a;
   line-height: 1.5;
 }
 
-.product .product-notes ul {
+.products .product-notes ul {
   list-style: none;
-  margin: 0 0 20px 0;
+  margin: 0 0 16px 0;
   padding: 0;
 }
 
-.product .product-notes li {
-  padding: 4px 0;
-  font-size: 0.9rem;
+.products .product-notes li {
+  padding: 5px 0;
+  font-size: 0.8rem;
   color: #4a4a4a;
   line-height: 1.4;
   position: relative;
   padding-left: 16px;
 }
 
-.product .product-notes li:before {
+.products .product-notes li:before {
   content: "•";
   position: absolute;
   left: 0;
-  top: 4px;
+  top: 6px;
   font-weight: bold;
-  color: #666;
+  color: #2c3e50;
+  font-size: 1.2rem;
 }
 
-.product .product-notes .fee {
+.products .product-notes .fee {
   font-weight: 600;
-  color: #1a1a1a;
+  color: #2c3e50;
 }
 
-.product .product-notes strong {
+.products .product-notes strong {
   font-weight: 700;
-  color: #1a1a1a;
+  color: #2c3e50;
 }
 
 /* Call-to-action section */
-.product .product-cta {
+.products .product-cta {
   margin-top: auto;
   padding-top: 20px;
 }
 
-.product .product-cta-button {
+.products .product-cta-button {
   display: block;
   width: 100%;
-  padding: 12px 24px;
+  padding: 12px 20px;
   background: transparent;
-  border: 2px solid #333;
-  color: #333;
+  border: 2px solid #e74c3c;
+  color: #e74c3c;
   text-decoration: none;
   text-align: center;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.9rem;
   border-radius: 4px;
   transition: all 0.3s ease;
   cursor: pointer;
   box-sizing: border-box;
 }
 
-.product .product-cta-button:hover {
-  background: #333;
+.products .product-cta-button:hover {
+  background: #e74c3c;
   color: white;
   text-decoration: none;
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.25);
 }
 
 /* Error state styling */
-.product .product-error {
+.products .product-error {
   border: 2px solid #e74c3c;
   background-color: #fff5f5;
 }
 
-.product .product-error .product-card-body {
+.products .product-error .product-card-body {
   text-align: center;
   padding: 40px 24px;
 }
 
-.product .product-error h3 {
+.products .product-error h3 {
   color: #e74c3c;
   margin-bottom: 12px;
   font-size: 1.25rem;
 }
 
-.product .product-error p {
+.products .product-error p {
   color: #666;
   font-size: 0.95rem;
   line-height: 1.5;
 }
 
+/* Test card styling */
+.products .test-card {
+  border: 2px solid #ff9500;
+  position: relative;
+}
+
+.products .test-card::before {
+  content: "DEBUG MODE";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  background: #ff9500;
+  color: white;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: bold;
+  z-index: 10;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
-  .product {
-    padding: 0 12px;
+  .products {
+    padding: 0 10px;
   }
 
-  .product > .product-grid {
+  .products > ul {
     grid-template-columns: 1fr;
-    grid-gap: 24px;
+    grid-gap: 20px;
+  }
+
+  .products .products-title h2 {
+    font-size: 1.5rem;
   }
   
-  .product .product-card-image {
-    padding: 24px 20px 12px;
-    min-height: 140px;
+  .products .product-card-image {
+    padding: 20px 16px 10px;
+    min-height: 120px;
   }
   
-  .product .product-card-image img {
-    max-width: 200px;
+  .products .product-card-image img {
+    max-width: 180px;
   }
   
-  .product .product-card-body {
-    padding: 20px;
+  .products .product-card-body {
+    padding: 16px;
   }
   
-  .product .product-title {
-    font-size: 1.25rem;
+  .products .product-title {
+    font-size: 1.1rem;
   }
 }
 
 @media (max-width: 480px) {
-  .product {
-    padding: 0 8px;
+  .products {
+    padding: 0 6px;
   }
 
-  .product > .product-grid {
-    grid-gap: 16px;
-  }
-  
-  .product .product-card-body {
-    padding: 16px;
-  }
-  
-  .product .product-title {
-    font-size: 1.2rem;
-  }
-  
-  .product .product-promo,
-  .product .product-notes {
-    margin-bottom: 16px;
+  .products > ul {
+    grid-gap: 12px;
   }
 
-  .product .product-cta {
-    padding-top: 16px;
+  .products .products-title h2 {
+    font-size: 1.3rem;
+  }
+  
+  .products .product-card-body {
+    padding: 14px;
+  }
+  
+  .products .product-title {
+    font-size: 1rem;
+  }
+  
+  .products .product-promo,
+  .products .product-notes {
+    margin-bottom: 14px;
+  }
+
+  .products .product-cta {
+    padding-top: 14px;
   }
 }
