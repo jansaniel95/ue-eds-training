@@ -255,5 +255,19 @@
         "value": ""
       }
     ]
+  },
+  {
+    "id": "product-item",
+    "fields": [
+      {
+        "component": "aem-content-fragment",
+        "name": "contentFragment",
+        "label": "Content Fragment Reference",
+        "valueType": "string",
+        "validations": {
+          "rootPath": "/content/dam"
+        }
+      }
+    ]
   }
 ]

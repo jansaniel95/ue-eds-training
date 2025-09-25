@@ -175,15 +175,15 @@
           }
         },
         {
-          "title": "Product",
-          "id": "product",
+          "title": "Product Item",
+          "id": "product-item",
           "plugins": {
             "xwalk": {
               "page": {
                 "resourceType": "core/franklin/components/block/v1/block/item",
                 "template": {
-                  "name": "Product",
-                  "model": "product"
+                  "name": "Product Item",
+                  "model": "product-item"
                 }
               }
             }
