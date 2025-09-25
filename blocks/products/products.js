@@ -2,37 +2,63 @@ import { createOptimizedPicture } from '../../scripts/aem.js';
 import { moveInstrumentation } from '../../scripts/scripts.js';
 
 /**
- * Detect the current environment and return appropriate base URL
+ * Detect the current environment and return appropriate URLs
  */
-function getBaseUrl() {
-  // Check if we're in Universal Editor (AEM author)
-  if (window.location.hostname.includes('author-') || window.location.hostname.includes('.adobeaemcloud.com')) {
-    return window.location.origin;
+function getEnvironmentConfig() {
+  const hostname = window.location.hostname;
+  const origin = window.location.origin;
+  
+  // AEM Universal Editor (author environment)
+  if (hostname.includes('author-') && hostname.includes('.adobeaemcloud.com')) {
+    return {
+      baseUrl: origin,
+      graphqlUrl: `${origin}/content/cq:graphql/jan-cf-models/endpoint.json`,
+      type: 'author'
+    };
   }
   
-  // Check if we're in localhost (development)
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return 'https://author-p9606-e71941.adobeaemcloud.com';
+  // AEM Publish (live environment) 
+  if (hostname.includes('.aem.live') || hostname.includes('.aem.page')) {
+    // Try publish instance first to avoid CORS
+    const publishUrl = 'https://publish-p9606-e71941.adobeaemcloud.com';
+    return {
+      baseUrl: publishUrl,
+      graphqlUrl: `${publishUrl}/content/cq:graphql/jan-cf-models/endpoint.json`,
+      type: 'publish',
+      fallbackUrl: 'https://author-p9606-e71941.adobeaemcloud.com' // fallback for development
+    };
   }
   
-  // Default to the author instance
-  return 'https://author-p9606-e71941.adobeaemcloud.com';
+  // Localhost development
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return {
+      baseUrl: 'https://author-p9606-e71941.adobeaemcloud.com',
+      graphqlUrl: 'https://author-p9606-e71941.adobeaemcloud.com/content/cq:graphql/jan-cf-models/endpoint.json',
+      type: 'development'
+    };
+  }
+  
+  // Default fallback
+  return {
+    baseUrl: 'https://author-p9606-e71941.adobeaemcloud.com',
+    graphqlUrl: 'https://author-p9606-e71941.adobeaemcloud.com/content/cq:graphql/jan-cf-models/endpoint.json',
+    type: 'default'
+  };
 }
 
 /**
- * GraphQL fetch for credit card content fragments with environment detection
+ * GraphQL fetch with CORS handling and fallback strategies
  */
 async function fetchContentFragment(path) {
-  const baseUrl = getBaseUrl();
-  const graphqlUrl = `${baseUrl}/content/cq:graphql/your-project/endpoint.json`;
+  const envConfig = getEnvironmentConfig();
   
-  console.log('Fetching from environment:', baseUrl);
-  console.log('GraphQL URL:', graphqlUrl);
+  console.log('Environment config:', envConfig);
   console.log('Content fragment path:', path);
+  console.log('Using GraphQL model: productCreditCardModelList');
   
   const query = `
     query {
-      creditCardList{
+      productCreditCardModelList{
         items{
           _path
           creditCardName
@@ -56,13 +82,16 @@ async function fetchContentFragment(path) {
     }
   `;
 
+  // Try primary GraphQL endpoint
   try {
-    const response = await fetch(graphqlUrl, {
+    console.log('Trying primary GraphQL URL:', envConfig.graphqlUrl);
+    
+    const response = await fetch(envConfig.graphqlUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      credentials: 'include',
+      credentials: envConfig.type === 'author' ? 'include' : 'omit', // Only include credentials for author
       body: JSON.stringify({ query })
     });
 
@@ -72,21 +101,132 @@ async function fetchContentFragment(path) {
       const data = await response.json();
       console.log('GraphQL Response data:', data);
       
-      if (data.data && data.data.creditCardList && data.data.creditCardList.items) {
-        const item = data.data.creditCardList.items.find(item => item._path === path);
+      if (data.data && data.data.productCreditCardModelList && data.data.productCreditCardModelList.items) {
+        const item = data.data.productCreditCardModelList.items.find(item => item._path === path);
         console.log('Found item for path:', path, item);
         return item || null;
       }
     } else {
       console.error('GraphQL Error:', response.status, response.statusText);
-      const errorText = await response.text();
-      console.error('Error details:', errorText);
+      throw new Error(`GraphQL failed with status ${response.status}`);
     }
   } catch (error) {
-    console.error('Fetch error:', error);
+    console.error('Primary GraphQL fetch failed:', error);
+    
+    // CORS fallback: Try without credentials for live environments
+    if (envConfig.type === 'publish' && error.message.includes('CORS')) {
+      console.log('Trying CORS fallback...');
+      try {
+        const response = await fetch(envConfig.graphqlUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'omit', // No credentials to avoid CORS
+          body: JSON.stringify({ query })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data && data.data.productCreditCardModelList && data.data.productCreditCardModelList.items) {
+            const item = data.data.productCreditCardModelList.items.find(item => item._path === path);
+            return item || null;
+          }
+        }
+      } catch (fallbackError) {
+        console.error('CORS fallback also failed:', fallbackError);
+      }
+    }
+    
+    // Alternative approach: Try direct content fragment JSON (for live environments)
+    if (envConfig.type === 'publish') {
+      console.log('Trying direct content fragment fetch...');
+      try {
+        const directUrl = `${envConfig.baseUrl}${path}.model.json`;
+        const directResponse = await fetch(directUrl, {
+          credentials: 'omit',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (directResponse.ok) {
+          const directData = await directResponse.json();
+          console.log('Direct fetch success:', directData);
+          
+          // Convert direct API response to expected format
+          if (directData && directData.elements) {
+            return convertDirectApiResponse(directData, path);
+          }
+        }
+      } catch (directError) {
+        console.error('Direct fetch also failed:', directError);
+      }
+    }
+    
+    // Final fallback: Use mock data for development/testing
+    console.log('Using fallback mock data for path:', path);
+    return getFallbackData(path);
   }
   
   return null;
+}
+
+/**
+ * Convert direct content fragment API response to expected format
+ */
+function convertDirectApiResponse(directData, path) {
+  try {
+    const elements = directData.elements || directData.data?.elements || {};
+    
+    return {
+      _path: path,
+      creditCardName: elements.creditCardName?.value || elements.title?.value || 'Credit Card',
+      creditCardDescription: {
+        plaintext: elements.creditCardDescription?.value || elements.description?.value || ''
+      },
+      creditCardImage: {
+        _path: elements.creditCardImage?.value?._path || elements.image?.value?._path || '',
+        _authorUrl: elements.creditCardImage?.value?._authorUrl || elements.image?.value?._authorUrl || '',
+        _publishUrl: elements.creditCardImage?.value?._publishUrl || elements.image?.value?._publishUrl || ''
+      },
+      promo: {
+        plaintext: elements.promo?.value || ''
+      },
+      notes: {
+        plaintext: elements.notes?.value || ''
+      }
+    };
+  } catch (error) {
+    console.error('Error converting direct API response:', error);
+    return null;
+  }
+}
+
+/**
+ * Fallback mock data when GraphQL is not available
+ */
+function getFallbackData(path) {
+  // Extract product name from path for mock data
+  const productName = path.split('/').pop().replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
+  
+  return {
+    _path: path,
+    creditCardName: `${productName} Credit Card (DEMO)`,
+    creditCardDescription: {
+      plaintext: "⚠️ DEMO DATA: This is sample content shown because the content fragment could not be loaded due to CORS restrictions. In production, configure CORS on your AEM instance or use the publish endpoint."
+    },
+    creditCardImage: {
+      _path: "/content/dam/sample/credit-card-image.jpg",
+      _authorUrl: "https://via.placeholder.com/400x250/0066cc/ffffff?text=Demo+Credit+Card"
+    },
+    promo: {
+      plaintext: "Demo Special Offer:\n\nThis is sample promotional content.\n\nReal data would come from your content fragment."
+    },
+    notes: {
+      plaintext: "Demo Information:\n\nThis is sample content.\nReal content would come from AEM.\nConfigure CORS or use publish endpoint for live data."
+    }
+  };
 }
 
 /**
@@ -104,13 +244,19 @@ function createProductCardHTML(productData) {
     html += '<div class="product-card-image">';
     
     let imageUrl;
-    if (productData.creditCardImage._authorUrl) {
+    const envConfig = getEnvironmentConfig();
+    
+    // Priority order for image URLs based on environment
+    if (envConfig.type === 'publish' && productData.creditCardImage._publishUrl) {
+      imageUrl = productData.creditCardImage._publishUrl;
+    } else if (envConfig.type === 'author' && productData.creditCardImage._authorUrl) {
+      imageUrl = productData.creditCardImage._authorUrl;
+    } else if (productData.creditCardImage._authorUrl) {
       imageUrl = productData.creditCardImage._authorUrl;
     } else if (productData.creditCardImage._publishUrl) {
       imageUrl = productData.creditCardImage._publishUrl;
     } else {
-      const baseUrl = getBaseUrl();
-      imageUrl = `${baseUrl}${productData.creditCardImage._path}`;
+      imageUrl = `${envConfig.baseUrl}${productData.creditCardImage._path}`;
     }
     
     html += `<picture><img src="${imageUrl}" alt="${productData.creditCardName || 'Credit Card'}" loading="lazy"></picture>`;
@@ -188,29 +334,27 @@ function createProductCardHTML(productData) {
  * decorate function - simplified like cards block with Universal Editor support
  */
 export default async function decorate(block) {
-  console.log('=== PRODUCTS BLOCK START ===');
-  console.log('Block element:', block);
-  console.log('Block children count:', block.children.length);
-  console.log('Current environment:', getBaseUrl());
+  const envConfig = getEnvironmentConfig();
+  console.log('🚀 Products Block - Environment:', envConfig.type, envConfig.baseUrl);
   
   const ul = document.createElement('ul');
   
   // Process each row like cards block does
   const rows = [...block.children];
-  console.log('Processing rows:', rows.length);
+  console.log(`📦 Processing ${rows.length} product rows`);
   
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
-    console.log(`Processing row ${i + 1}:`, row.outerHTML);
     
     // Find content fragment path from the row - multiple ways
     let contentFragmentPath = null;
+    let detectionMethod = '';
     
     // Method 1: Check for link
     const link = row.querySelector('a');
     if (link) {
       contentFragmentPath = link.getAttribute('href');
-      console.log(`Row ${i + 1} - Found link href:`, contentFragmentPath);
+      detectionMethod = 'link href';
     }
     
     // Method 2: Check row text content
@@ -218,7 +362,7 @@ export default async function decorate(block) {
       const rowText = row.textContent.trim();
       if (rowText.startsWith('/content')) {
         contentFragmentPath = rowText;
-        console.log(`Row ${i + 1} - Found text path:`, contentFragmentPath);
+        detectionMethod = 'text content';
       }
     }
     
@@ -227,24 +371,38 @@ export default async function decorate(block) {
       const dataPath = row.getAttribute('data-path') || row.getAttribute('data-aue-resource');
       if (dataPath && dataPath.startsWith('/content')) {
         contentFragmentPath = dataPath;
-        console.log(`Row ${i + 1} - Found data attribute path:`, contentFragmentPath);
+        detectionMethod = 'data attribute';
       }
     }
     
-    // Method 4: Check for aem-content-fragment field (Universal Editor structured content)
+    // Method 4: Check for aem-content-fragment picker field (Universal Editor)
     if (!contentFragmentPath) {
-      const contentFragmentInput = row.querySelector('input[name="contentFragment"]') || 
-                                    row.querySelector('[data-aue-prop="contentFragment"]');
-      if (contentFragmentInput) {
-        const fragmentValue = contentFragmentInput.value || contentFragmentInput.textContent;
+      const pickerInput = row.querySelector('input[name="picker"]') || 
+                          row.querySelector('[data-aue-prop="picker"]') ||
+                          row.querySelector('[data-aue-model="product"] input[name="picker"]');
+      if (pickerInput) {
+        const fragmentValue = pickerInput.value || pickerInput.textContent;
         if (fragmentValue && fragmentValue.startsWith('/content')) {
           contentFragmentPath = fragmentValue;
-          console.log(`Row ${i + 1} - Found structured content fragment:`, contentFragmentPath);
+          detectionMethod = 'picker input';
         }
       }
     }
     
-    console.log(`Row ${i + 1} - Final path:`, contentFragmentPath);
+    // Method 5: Check for any input with content fragment path
+    if (!contentFragmentPath) {
+      const allInputs = row.querySelectorAll('input');
+      for (const input of allInputs) {
+        const value = input.value || input.getAttribute('value');
+        if (value && value.startsWith('/content/dam')) {
+          contentFragmentPath = value;
+          detectionMethod = 'generic input';
+          break;
+        }
+      }
+    }
+    
+    console.log(`🔍 Row ${i + 1}: ${contentFragmentPath ? `Found via ${detectionMethod}` : 'No path found'} - ${contentFragmentPath || 'N/A'}`);
     
     if (contentFragmentPath && contentFragmentPath.startsWith('/content')) {
       // Create li like cards block
@@ -254,34 +412,30 @@ export default async function decorate(block) {
       moveInstrumentation(row, li);
       
       try {
-        console.log(`Fetching data for row ${i + 1}...`);
         // Fetch content fragment data
         const productData = await fetchContentFragment(contentFragmentPath);
-        console.log(`Row ${i + 1} - Product data:`, productData);
         
         if (productData) {
           li.innerHTML = createProductCardHTML(productData);
-          console.log(`Row ${i + 1} - Card created successfully`);
+          console.log(`✅ Row ${i + 1}: Card created successfully`);
         } else {
           li.innerHTML = `<div class="product-card-body"><h3>No Data</h3><p>Content fragment not found: ${contentFragmentPath}</p></div>`;
-          console.warn(`Row ${i + 1} - No product data returned`);
+          console.warn(`⚠️ Row ${i + 1}: No product data returned`);
         }
       } catch (error) {
-        console.error(`Row ${i + 1} - Error:`, error);
+        console.error(`❌ Row ${i + 1}: Error -`, error.message);
         li.innerHTML = `<div class="product-card-body"><h3>Error</h3><p>${error.message}</p></div>`;
       }
       
       ul.append(li);
     } else {
-      console.warn(`Row ${i + 1} - No valid content fragment path found`);
+      console.warn(`⚠️ Row ${i + 1}: No valid content fragment path found`);
     }
   }
-  
-  console.log('Final card count:', ul.children.length);
   
   // Clear block and append ul like cards block
   block.textContent = '';
   block.append(ul);
   
-  console.log('=== PRODUCTS BLOCK COMPLETE ===');
+  console.log(`🎯 Products Block Complete: ${ul.children.length} cards created`);
 }
